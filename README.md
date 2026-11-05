@@ -13,7 +13,6 @@
 ---
 
 ### 2. Lista de Tareas y Crear Tarea
-> *Pega aquí la captura donde se ve la lista y agregando una tarea:*
 
 <img width="1132" height="620" alt="image" src="https://github.com/user-attachments/assets/9e01dab7-990d-4fe9-aa0b-ca35463587a4" />
 
@@ -28,7 +27,6 @@
 ---
 
 ### 4. API Backend Corriendo (Node.js / Express)
-> *Pega aquí la captura de la terminal con el servidor iniciado:*
 
 <img width="663" height="157" alt="image" src="https://github.com/user-attachments/assets/9dfcb4ea-5d45-4e93-bfeb-bca73a5050a3" />
 
