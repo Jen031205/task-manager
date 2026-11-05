@@ -7,35 +7,43 @@ const path = require('path');
 let pool = null;
 let memDb = null;
 
-function initDb() {
+function setupMemDb() {
+  const { newDb } = require('pg-mem');
+  memDb = newDb();
+  const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  memDb.public.none(schemaSql);
+  const adapter = memDb.adapters.createPg();
+  pool = new adapter.Pool();
+  console.log('Self-contained in-memory PostgreSQL engine ready.');
+}
+
+async function initDb() {
   const isTest = process.env.NODE_ENV === 'test';
-  const hasPgUrl = Boolean(process.env.DATABASE_URL);
 
   if (isTest && !process.env.USE_REAL_DB) {
-    // In-memory PostgreSQL engine using pg-mem for isolated tests
-    const { newDb } = require('pg-mem');
-    memDb = newDb();
-    
-    // Register custom functions if needed
-    const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-    memDb.public.none(schemaSql);
+    setupMemDb();
+    return;
+  }
 
-    const adapter = memDb.adapters.createPg();
-    pool = new adapter.Pool();
-  } else {
-    // Real PostgreSQL connection pool
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/taskmanager',
+  try {
+    const candidatePool = new Pool({
+      connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgrespassword@localhost:5432/taskmanager',
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 1500,
     });
+    await candidatePool.query('SELECT 1');
+    pool = candidatePool;
+    console.log('Connected to PostgreSQL successfully.');
+  } catch (err) {
+    console.warn(`PostgreSQL unavailable (${err.message}). Using self-contained in-memory database.`);
+    setupMemDb();
   }
 }
 
 async function query(text, params) {
   if (!pool) {
-    initDb();
+    await initDb();
   }
   return pool.query(text, params);
 }
@@ -62,4 +70,3 @@ module.exports = {
   closeDb,
   initDb,
 };
-

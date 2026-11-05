@@ -32,7 +32,7 @@ async function seedDefaultUser() {
 
 async function start() {
   try {
-    db.initDb();
+    await db.initDb();
     console.log('Database initialized.');
 
     await seedDefaultUser();
@@ -47,4 +47,3 @@ async function start() {
 }
 
 start();
-
