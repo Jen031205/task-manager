@@ -14,10 +14,12 @@ class ApiService {
 
   String? accessToken;
   String? refreshToken;
+  String? lastError;
 
   bool get isAuthenticated => accessToken != null;
 
   Future<bool> login(String email, String password) async {
+    lastError = null;
     final response = await _client.post(
       Uri.parse('$baseUrl/api/v1/auth/login'),
       headers: {'Content-Type': 'application/json'},
@@ -30,10 +32,16 @@ class ApiService {
       refreshToken = data['refreshToken'] as String?;
       return true;
     }
+
+    try {
+      final body = jsonDecode(response.body);
+      lastError = body['error']?.toString();
+    } catch (_) {}
     return false;
   }
 
   Future<bool> register(String email, String password) async {
+    lastError = null;
     final response = await _client.post(
       Uri.parse('$baseUrl/api/v1/auth/register'),
       headers: {'Content-Type': 'application/json'},
@@ -46,6 +54,11 @@ class ApiService {
       refreshToken = data['refreshToken'] as String?;
       return true;
     }
+
+    try {
+      final body = jsonDecode(response.body);
+      lastError = body['error']?.toString();
+    } catch (_) {}
     return false;
   }
 

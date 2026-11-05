@@ -11,17 +11,20 @@ const PORT = process.env.PORT || 3000;
 async function seedDefaultUser() {
   try {
     const email = 'tester@example.test';
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash('local-test-password', salt);
+
     const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length === 0) {
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('local-test-password', salt);
       await db.query('INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)', [
         uuidv4(),
         email,
         hash,
       ]);
-      console.log('Default test user seeded: tester@example.test / local-test-password');
+    } else {
+      await db.query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email]);
     }
+    console.log('Default test user ready: tester@example.test / local-test-password');
   } catch (err) {
     console.warn('Could not seed default user (will continue):', err.message);
   }

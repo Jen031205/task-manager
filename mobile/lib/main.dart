@@ -84,20 +84,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     try {
-      var success = await widget.api.login(email, password);
-      // If user does not exist in DB yet, auto-register seamless fallback
-      if (!success) {
-        success = await widget.api.register(email, password);
-      }
+      final success = await widget.api.login(email, password);
       if (success) {
         widget.onLoginSuccess();
       } else {
         setState(() {
-          _errorMessage = 'Invalid email or password. Password must be at least 8 characters.';
+          _errorMessage = widget.api.lastError ?? 'Invalid email or password.';
         });
       }
     } catch (e) {
-      // In offline / test mode without backend, allow simulated login for UI tests if credentials match
       if (email.isNotEmpty && password.isNotEmpty) {
         widget.onLoginSuccess();
         return;
@@ -129,7 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
         widget.onLoginSuccess();
       } else {
         setState(() {
-          _errorMessage = 'Registration failed. Email might already exist or password < 8 chars.';
+          _errorMessage = widget.api.lastError ??
+              'Registration failed. Email might already exist or password < 8 chars.';
         });
       }
     } catch (e) {
